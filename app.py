@@ -31,8 +31,8 @@ if __name__ == "__main__":
 
     st.set_page_config(page_title="VERINT", page_icon="resource/v_logo.png")
 
-    st.image("resource/verint_logo.png", width=300)
-    st.title("Timeoff Requests")
+    st.image("resource/verint_logo.png", width=200)
+    st.header("Timeoff Requests")
 
     if "timeoff" not in st.session_state:
 
@@ -43,6 +43,7 @@ if __name__ == "__main__":
         st.session_state["timeoff"] = get_timeoff(st.session_state["token"], st.session_state["org_id"], status=STATUS_CODE)
 
     data = {
+        "Request ID": [],
         "Employee Name": [],
         "Request Status": [],
         "Submitted Time": [],
@@ -52,14 +53,14 @@ if __name__ == "__main__":
 
     for timeoff_req in st.session_state["timeoff"]["timeoffRequest"]:
 
-        request_id = timeoff_req["id"]
-
         employee_id = timeoff_req["employeeId"]
         employee = get_an_employee(st.session_state["token"], employee_id)
+
         person = employee["data"]["attributes"]["person"]
         first_name = person["firstName"]
         last_name = person["lastName"]
 
+        data["Request ID"].append(timeoff_req["id"])
         data["Employee Name"].append(f"{first_name} {last_name}")
         data["Request Status"].append(str(timeoff_req["statusHistory"][0]["status"]))
         data["Submitted Time"].append(str(timeoff_req["submittedOn"]))
@@ -72,7 +73,9 @@ if __name__ == "__main__":
 
     if st.session_state["timeoff"]["timeoffRequest"]:
 
-        request_num = st.selectbox("Please select the Request #", [f"Request #{i+1}" for i in range(len(data["Employee Name"]))])
+        request_num = st.selectbox("Please select the Request #", [f"Request #{i+1}: {data['Request ID'][i]}" for i in range(len(data["Employee Name"]))])
+
+        request_id = data["Request ID"][int(request_num.split("#")[-1].split(":")[0])-1]
 
         action = st.radio("Please select the Action", ["Approve", "Tentatively Approve", "Deny"])
 
